@@ -29,23 +29,15 @@
 
 <script>
 // ------------------------------------------------------
-// RESPO-Liste (ALLE Cluster)
+// RESPO-Liste
 // ------------------------------------------------------
 const RESPO_NAMES = [
-  "AIR",
-  "boerse",
-  "markt3",
-  "HOME",
-  "USE",
-  "ACSH",
-  "REAL",
-  "BIL",
-  "DU",
-  "NG"
+  "AIR","boerse","markt3","HOME","USE",
+  "ACSH","REAL","BIL","DU","NG"
 ];
 
 // ------------------------------------------------------
-// Loader
+// RESPO Loader
 // ------------------------------------------------------
 async function loadRespo(name){
   try {
@@ -77,32 +69,11 @@ function renderScan(scan){
 
     let statusClass = "ok";
     if(r.RESULT === "HELFEN") statusClass = "help";
-    if(r.ERROR === true) statusClass = "error";
-    if(r.MISS === true) statusClass = "error";
+    if(r.ERROR === true || r.MISS === true) statusClass = "error";
 
     box.innerHTML = `
       <h2 class="${statusClass}">${r.NAME}</h2>
       <p><b>ID:</b> ${r.ID}</p>
       <p><b>LAGE:</b> ${r.RAUM ? JSON.stringify(r.RAUM) : "(keine LAGE)"}</p>
       <p><b>STATUS:</b> ${r.STATUS}</p>
-      <p><b>RESULT:</b> ${r.RESULT}</p>
-      <p><b>OUT:</b> ${JSON.stringify(r.OUT)}</p>
-      <p><b>REAL:</b> ${r.WAHRHEIT || "?"}</p>
-      <p><b>EDIT:</b> ${r.IST_IST || "?"}</p>
-    `;
-
-    out.appendChild(box);
-  });
-}
-
-// ------------------------------------------------------
-// Start
-// ------------------------------------------------------
-loadAllRespos().then(respos => {
-  const scan = respos.map(r => GHOST_SCAN_REAL(r));
-  renderScan(scan);
-});
-</script>
-
-</body>
-</html>
+      <p><b>RESULT
