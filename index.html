@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>GHOST-SCAN – Systemlage · Live‑Loop</title>
+  <title>GHOST-SCAN – Systemlage · FINAL</title>
   <style>
     * { box-sizing:border-box; }
     body {
@@ -71,7 +71,7 @@
 <body>
 
   <h1>👻 GHOST‑SCAN · Systemlage</h1>
-  <div class="sub">🔄 Live‑Loop · alle 3 Sekunden · paralleles Laden</div>
+  <div class="sub">🔄 Live‑Loop · alle 3 Sekunden · paralleles Laden · Fixpunkt + ROLL‑OVER</div>
 
   <div id="grid" class="grid"></div>
   <div id="statusLine" class="footer">⏳ Lade …</div>
@@ -91,7 +91,6 @@
 
     // ─── Lade‑Funktion (parallel) ─────────────────────────────────
     async function loadAllRespos() {
-      // Alle Respos parallel anfordern – viel schneller als sequenziell
       const promises = RESPO_NAMES.map(async (name) => {
         try {
           const res = await fetch(`/RESPO/${name}.json`);
@@ -99,14 +98,41 @@
           const data = await res.json();
           return { ...data, NAME: name, MISS: false };
         } catch (err) {
-          // Fallback: Fehler als "missing" markieren
           return { NAME: name, MISS: true, ERROR: err.message };
         }
       });
 
-      // Auf alle Antworten warten
-      const results = await Promise.all(promises);
-      return results;
+      return Promise.all(promises);
+    }
+
+    // ─── Fixpunkt berechnen ───────────────────────────────────────
+    function computeFixpoint(respos) {
+      const flat = respos.flatMap(r => r.OUT || []).map(Number).filter(x => !isNaN(x));
+      if (!flat.length) return 0.777;
+      const avg = flat.reduce((a,b)=>a+b,0) / flat.length;
+      return Number(((avg + 0.777) / 2).toFixed(3));
+    }
+
+    // ─── LOOP‑Objekt ───────────────────────────────────────────────
+    function loopReturn(fix) {
+      return {
+        LOOP: true,
+        FIX: fix,
+        TIME: Date.now(),
+        STATE: fix > 0.7 ? "STABIL" : "LOW",
+        NEXT: Number((fix * 1.11).toFixed(3))
+      };
+    }
+
+    // ─── ROLL‑OVER ────────────────────────────────────────────────
+    function applyRollOver(loop) {
+      document.querySelectorAll(".respo-card").forEach(card => {
+        const extra = document.createElement("div");
+        extra.style.color = "#88f";
+        extra.style.fontSize = "11px";
+        extra.innerHTML = `<b>LOOP-FIX:</b> ${loop.FIX} · <b>STATE:</b> ${loop.STATE}`;
+        card.appendChild(extra);
+      });
     }
 
     // ─── Renderer ──────────────────────────────────────────────────
@@ -117,14 +143,12 @@
         const card = document.createElement('div');
         card.className = 'respo-card';
 
-        // Status‑Klasse bestimmen
         let statusClass = 'status-ok';
         if (r.MISS || r.ERROR) statusClass = 'status-error';
         else if (r.STATUS === 'HELFEN' || r.RESULT === 'HELFEN') statusClass = 'status-help';
 
         card.classList.add(statusClass);
 
-        // Inhalte sicher ausgeben
         const id = r.ID ?? '—';
         const raum = r.RAUM ? JSON.stringify(r.RAUM) : '(keine LAGE)';
         const status = r.STATUS ?? (r.MISS ? 'MISSING' : 'UNKNOWN');
@@ -143,31 +167,35 @@
         `;
         grid.appendChild(card);
       });
-
-      // Statuszeile aktualisieren
-      const now = new Date().toLocaleTimeString();
-      const ok = respos.filter(r => !r.MISS && !r.ERROR).length;
-      const total = respos.length;
-      statusLine.innerHTML = `
-        <span class="live">●</span> Letzter Scan: ${now} · 
-        <span style="color:#00ff88;">${ok}</span> / ${total} Respos verfügbar
-        <span style="margin-left:12px;color:#5a7a8a;">(Loop alle 3s)</span>
-      `;
     }
 
-    // ─── Haupt‑Loop (wird periodisch ausgeführt) ──────────────────
+    // ─── Haupt‑Loop ────────────────────────────────────────────────
     async function scanLoop() {
       try {
         const respos = await loadAllRespos();
         renderScan(respos);
+
+        const fix = computeFixpoint(respos);
+        const loop = loopReturn(fix);
+
+        applyRollOver(loop);
+
+        const now = new Date().toLocaleTimeString();
+        const ok = respos.filter(r => !r.MISS && !r.ERROR).length;
+        const total = respos.length;
+
+        statusLine.innerHTML = `
+          <span class="live">●</span> Scan: ${now} · 
+          <span style="color:#00ff88;">${ok}</span> / ${total} Respos · 
+          Fixpunkt: <span style="color:#6cf;">${loop.FIX}</span>
+        `;
+
       } catch (err) {
-        statusLine.innerHTML = `❌ Fehler im Scan‑Loop: ${err.message}`;
-        console.error(err);
+        statusLine.innerHTML = `❌ Fehler im Loop: ${err.message}`;
       }
     }
 
     // ─── Start ────────────────────────────────────────────────────
-    // Sofort einmal scannen, dann alle 3 Sekunden wiederholen
     scanLoop();
     setInterval(scanLoop, 3000);
   </script>
