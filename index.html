@@ -2,203 +2,752 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>GHOST-SCAN – Systemlage · FINAL</title>
+  <title>IKI1UC · PIPELINE4 + GHOST‑SCAN</title>
+
   <style>
+    /* ===== BASIS (wie gehabt) ===== */
     * { box-sizing:border-box; }
-    body {
-      background: #0b0b0b;
-      color: #e0e0e0;
-      font-family: 'Consolas', monospace;
-      padding: 20px;
-      margin: 0;
-    }
-    h1 {
-      color: #6cf;
-      text-align: center;
-      font-size: 1.6rem;
-      letter-spacing: 2px;
-      margin-bottom: 6px;
-    }
-    .sub {
-      text-align: center;
-      color: #5a7a8a;
-      font-size: 13px;
-      margin-bottom: 20px;
-    }
-    .grid {
+    body { background:#0b0b0b; color:#e0e0e0; font-family:'Consolas',monospace; padding:15px; margin:0; }
+    .container { max-width:1400px; margin:0 auto; }
+    h1 { color:#6cf; font-size:1.4rem; margin:0 0 8px 0; }
+    .flex { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:4px 0; }
+    .grid-2 { display:grid; grid-template-columns: 2fr 1fr; gap:15px; }
+    @media (max-width:800px) { .grid-2 { grid-template-columns:1fr; } }
+
+    /* ===== CANVAS ===== */
+    #orbitCanvas { background:#000; border:1px solid #333; display:block; width:100%; height:auto; aspect-ratio:700/300; }
+
+    /* ===== PANELS ===== */
+    .panel { background:#111; border:1px solid #2a3a4a; border-radius:8px; padding:10px; margin-bottom:10px; }
+    .panel h2 { color:#8ab0c0; font-size:14px; margin:0 0 8px 0; border-bottom:1px solid #2a3a4a; padding-bottom:4px; }
+    .pipeline-row { display:flex; justify-content:space-between; font-size:13px; padding:2px 0; border-bottom:1px solid #1a2226; }
+    .pipeline-row .label { color:#5a7a8a; }
+    .pipeline-row .value { font-weight:bold; }
+    .pipeline-row .value.green { color:#8cf0d0; }
+    .pipeline-row .value.orange { color:#f0d080; }
+    .pipeline-row .value.purple { color:#b388ff; }
+    .pipeline-row .value.gold { color:#ffd700; }
+    .pipeline-row .value.pink { color:#ff8a9b; }
+
+    /* ===== ATOM-UHR ===== */
+    .atom-clock { background:#0a1a1a; border:1px solid #1a3a3a; border-radius:6px; padding:8px 12px; text-align:center; margin-top:6px; }
+    .atom-clock .time { font-size:28px; color:#6cf; letter-spacing:3px; font-weight:bold; }
+    .atom-clock .sub { font-size:12px; color:#5a7a8a; }
+
+    /* ===== GHOST‑SCAN (Grid) ===== */
+    .ghost-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 6px;
+      margin-top: 6px;
     }
-    .respo-card {
-      background: #111;
-      border: 1px solid #2a3a4a;
-      border-radius: 8px;
-      padding: 12px;
+    .ghost-card {
+      background: #0a0a12;
+      border: 1px solid #1a2226;
+      border-radius: 4px;
+      padding: 6px 8px;
+      font-size: 11px;
       transition: border-color 0.3s;
     }
-    .respo-card h2 {
-      font-size: 16px;
-      margin: 0 0 6px 0;
-      border-bottom: 1px solid #1a2226;
-      padding-bottom: 4px;
-    }
-    .respo-card .detail {
-      font-size: 12px;
+    .ghost-card h3 {
+      font-size: 13px;
+      margin: 0 0 2px 0;
       color: #8ab0c0;
-      line-height: 1.5;
+      border-bottom: 1px solid #1a2226;
+      padding-bottom: 2px;
     }
-    .respo-card .detail span {
-      color: #e0e0e0;
-    }
-    .status-ok { border-color: #00ff88; }
-    .status-ok h2 { color: #00ff88; }
-    .status-help { border-color: #ffcc00; }
-    .status-help h2 { color: #ffcc00; }
-    .status-error { border-color: #ff4444; }
-    .status-error h2 { color: #ff4444; }
-    .footer {
-      margin-top: 20px;
-      text-align: center;
-      font-size: 12px;
+    .ghost-card .g-detail {
+      font-size: 10px;
       color: #5a7a8a;
-      border-top: 1px solid #1a2226;
-      padding-top: 10px;
+      line-height: 1.4;
     }
-    .footer .live { color: #00ff88; font-weight: bold; }
+    .ghost-card .g-detail span { color: #e0e0e0; }
+    .g-ok { border-color: #00ff88; }
+    .g-help { border-color: #ffcc00; }
+    .g-error { border-color: #ff4444; }
+    .g-ok h3 { color: #00ff88; }
+    .g-help h3 { color: #ffcc00; }
+    .g-error h3 { color: #ff4444; }
+
+    /* ===== SCANNER ===== */
+    #tabScanBox { font-size:12px; max-height:140px; overflow:auto; background:#0a0a12; border-radius:4px; padding:4px; }
+    .tab-row { display:flex; gap:10px; align-items:center; padding:2px 4px; border-bottom:1px solid #1a2226; }
+    .tab-row .tid { color:#6cf; min-width:70px; }
+    .tab-row .trole { min-width:70px; }
+    .tab-row .tfp { color:#5a7a8a; min-width:80px; }
+    .tab-row.mismatch { background:rgba(255,80,80,0.08); }
+    .tab-row.mismatch .tfp { color:#ff6b6b; }
+    .tab-row.agent .trole { color:#ff8a5c; }
+    .tab-row.agent-p9 .trole { color:#b388ff; }
+    #mismatchLog { font-size:12px; max-height:80px; overflow:auto; margin-top:4px; color:#ff9b9b; }
+
+    /* ===== BUTTONS / BADGES ===== */
+    .btn { padding:5px 14px; background:#222; color:#fff; border:1px solid #555; cursor:pointer; font-family:Consolas,monospace; font-size:13px; border-radius:4px; }
+    .btn:hover { border-color:#6cf; }
+    .btn.active { border-color:#6cf; background:#2a3a4a; }
+    .btn.nc { border-color:#ff8a5c; color:#ff8a5c; }
+    .btn.nc:hover { background:#2a1a0a; }
+    .btn.p9 { border-color:#b388ff; color:#b388ff; }
+    .btn.p9:hover { background:#1a0a2a; }
+    .badge { display:inline-block; padding:2px 12px; border-radius:12px; font-size:11px; border:1px solid #2a3a4a; }
+    .badge.aktiv { border-color:#8cf0d0; color:#8cf0d0; }
+    .badge.pause { border-color:#f0d080; color:#f0d080; }
+    .badge.leader { border-color:#ffd700; color:#ffd700; background:#1a1a0a; }
+    .badge.follower { border-color:#888; color:#888; }
+    .badge.sync { border-color:#8cf0d0; color:#8cf0d0; }
+    .badge.desync { border-color:#ff6b6b; color:#ff6b6b; }
+
+    /* ===== LOG ===== */
+    #log { background:#111; padding:10px; height:100px; overflow:auto; font-size:12px; margin-top:8px; border:1px solid #2a3a4a; border-radius:4px; }
+    input[type="range"] { width:100px; background:#222; accent-color:#6cf; }
+    .label { color:#8ab0c0; font-size:12px; }
+    .status { font-size:12px; color:#5a7a8a; }
+    .footer-ghost { margin-top:8px; text-align:center; font-size:11px; color:#5a7a8a; border-top:1px solid #1a2226; padding-top:6px; }
+    .footer-ghost .live { color:#00ff88; font-weight:bold; }
   </style>
 </head>
 <body>
 
-  <h1>👻 GHOST‑SCAN · Systemlage</h1>
-  <div class="sub">🔄 Live‑Loop · alle 3 Sekunden · paralleles Laden · Fixpunkt + ROLL‑OVER</div>
+<div class="container">
 
-  <div id="grid" class="grid"></div>
-  <div id="statusLine" class="footer">⏳ Lade …</div>
+  <!-- ===== HEADER ===== -->
+  <div class="flex" style="justify-content:space-between;">
+    <h1>🔧 IKI1UC · PIPELINE4 <span style="color:#5a7a8a;font-size:14px;font-weight:300;">+ GHOST‑SCAN · Diamond‑Sync</span></h1>
+    <div>
+      <span class="badge" id="roleStatus">LEADER</span>
+      <span class="badge sync" id="syncStatus">● verbunden</span>
+      <span style="color:#6cf;font-size:12px;" id="tabIdLabel">–</span>
+      <span style="margin-left:12px;color:#8ab0c0;font-size:11px;" id="fixpointDisplay">FIX: —</span>
+    </div>
+  </div>
 
-  <script>
-    "use strict";
+  <!-- ===== HAUPT‑LAYOUT ===== -->
+  <div class="grid-2">
+    <!-- Linke Spalte: Orbit + Steuerung -->
+    <div>
+      <canvas id="orbitCanvas" width="700" height="300"></canvas>
+      <div class="flex" style="justify-content:space-between; font-size:12px; color:#5a7a8a; margin-top:4px;">
+        <span>🌀 Orbit: <span id="orbitStatus" class="badge aktiv">AKTIV</span></span>
+        <span>👑 Rolle: <span id="roleBadge" class="badge leader">LEADER</span></span>
+        <span>🔮 Fix: <span id="fixpointMini" style="color:#6cf;">—</span></span>
+      </div>
+      <!-- Steuerung -->
+      <div class="flex" style="margin-top:6px;">
+        <button class="btn" id="btnPlay">⏸ Pause</button>
+        <button class="btn" id="btnStep">▶ Schritt</button>
+        <button class="btn" id="btnReset">⟲ Reset</button>
+        <span class="label">Speed</span>
+        <input type="range" id="speedSlider" min="1" max="10" value="3">
+        <span class="label" id="speedLabel">3×</span>
+      </div>
+      <!-- Modus-Buttons -->
+      <div class="flex" style="margin-top:4px;">
+        <button class="btn" id="btnModeIQQ">IQQ</button>
+        <button class="btn" id="btnModeOCTA">OCTA</button>
+        <button class="btn" id="btnModeA81">A81</button>
+        <button class="btn nc" id="btnModeNC">🤖 NC</button>
+        <button class="btn p9" id="btnModeP9">🧩 P9</button>
+      </div>
+      <!-- Axiom + Pipeline -->
+      <div class="flex" style="font-size:12px;color:#8ab0c0;gap:14px;margin-top:4px;flex-wrap:wrap;">
+        <span>IQQ: <span id="axiomIQQ" style="color:#ffd700;">9→3</span></span>
+        <span>OCTA: <span id="axiomOCTA" style="color:#6cf;">◉◆△</span></span>
+        <span>A81: <span id="axiomA81" style="color:#b388ff;">27·81</span></span>
+        <span>🤖 NC: <span id="axiomNC" style="color:#ff8a5c;">0 Moves</span></span>
+        <span>🧩 P9: <span id="axiomP9" style="color:#b388ff;">0 Moves</span></span>
+        <span>📦 Pipeline: <span id="pipelineStatus" style="color:#8cf0d0;">IDLE</span></span>
+      </div>
+    </div>
 
-    // ─── RESPO‑Liste ──────────────────────────────────────────────
-    const RESPO_NAMES = [
-      "AIR","boerse","markt3","HOME","USE",
-      "ACSH","REAL","BIL","DU","NG"
-    ];
+    <!-- Rechte Spalte: Navigation + Pipeline4 + GHOST‑SCAN + Scanner -->
+    <div>
+      <!-- Navigation -->
+      <div class="panel">
+        <h2>🧭 NAVIGATION</h2>
+        <div class="pipeline-row"><span class="label">Position</span><span class="value green" id="naviIndex">0</span></div>
+        <div class="pipeline-row"><span class="label">Symbol</span><span class="value orange" id="naviSymbol">◉</span></div>
+        <div class="pipeline-row"><span class="label">Kurs</span><span class="value" id="naviHeading">000°</span></div>
+        <div class="pipeline-row"><span class="label">Geschw.</span><span class="value pink" id="naviSpeed">0.0</span></div>
+        <div class="pipeline-row"><span class="label">Modus</span><span class="value gold" id="naviMode">IQQ</span></div>
+        <div class="atom-clock">
+          <div class="time" id="atomTime">00:00:00.000</div>
+          <div class="sub">⚛️ Takt <span id="atomTick">0</span> · Δt <span id="atomDelta">0.0</span>ms</div>
+        </div>
+      </div>
 
-    // ─── DOM‑Refs ──────────────────────────────────────────────────
-    const grid = document.getElementById('grid');
-    const statusLine = document.getElementById('statusLine');
+      <!-- PIPELINE4 -->
+      <div class="panel">
+        <h2>📦 PIPELINE4 · Vier‑Ebenen</h2>
+        <div class="pipeline-row"><span class="label">IX (Input)</span><span class="value green" id="pipelineIX">—</span></div>
+        <div class="pipeline-row"><span class="label">IO (Funktion)</span><span class="value orange" id="pipelineIO">—</span></div>
+        <div class="pipeline-row"><span class="label">Norm</span><span class="value purple" id="pipelineNorm">—</span></div>
+        <div class="pipeline-row"><span class="label">OI (Output)</span><span class="value pink" id="pipelineOI">—</span></div>
+        <div style="margin-top:4px; font-size:11px; color:#5a7a8a;">
+          Durchlauf: <span id="pipelineCycle">0</span> · letzter Schritt: <span id="pipelineLastStep">—</span>
+        </div>
+      </div>
 
-    // ─── Lade‑Funktion (parallel) ─────────────────────────────────
-    async function loadAllRespos() {
-      const promises = RESPO_NAMES.map(async (name) => {
-        try {
-          const res = await fetch(`/RESPO/${name}.json`);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const data = await res.json();
-          return { ...data, NAME: name, MISS: false };
-        } catch (err) {
-          return { NAME: name, MISS: true, ERROR: err.message };
+      <!-- GHOST‑SCAN PANEL -->
+      <div class="panel">
+        <h2>👻 GHOST‑SCAN · Respos <span style="font-size:10px;color:#5a7a8a;">(alle 3s)</span></h2>
+        <div id="ghostGrid" class="ghost-grid"></div>
+        <div class="footer-ghost">
+          <span class="live">●</span> <span id="ghostStatus">Lade …</span>
+        </div>
+      </div>
+
+      <!-- Scanner -->
+      <div class="panel">
+        <h2>🔍 ROLLEN‑ &amp; CODE‑SCANNER</h2>
+        <div id="tabScanBox">⏳ Warte auf andere Tabs …</div>
+        <div id="mismatchLog"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOG -->
+  <div id="log">🔧 PIPELINE4 + GHOST‑SCAN · gestartet</div>
+
+</div>
+
+<!-- ===== EXTERNE MODULE (PIPELINE4) ===== -->
+<script src="3.js"></script>
+<script src="P0.js"></script>
+<script src="P1.js"></script>
+<script src="P2.js"></script>
+<script src="P4.js"></script>
+<script src="QI.js"></script>
+<script src="OS_CORE.js"></script>
+<script src="coreScan.js"></script>
+
+<script>
+"use strict";
+/* ================================================================
+   IKI1UC · PIPELINE4 + GHOST‑SCAN (integriert)
+   Enthält: Orbit, Atomuhr, Navigation, Pipeline4, Leader‑Election,
+   Code‑Fingerprint, Scanner, NC‑ & P9‑Agent, GHOST‑SCAN.
+   ================================================================ */
+
+  // ─── KONFIGURATION ──────────────────────────────────────────────
+  const ORBIT = [
+    "◉","↗","↘","3","9","↘","↗","◎","↗","↘","3","9","↘","↗",
+    "◎","↗","↘","81","◆","↘","↗","△","↗","↘","27","▣","↘","↗","3","↺"
+  ];
+
+  const AXIOM_MAP = {
+    '3':'IQQ','9':'IQQ',
+    '◎':'OCTA','◉':'OCTA','◆':'OCTA','△':'OCTA','▣':'OCTA','↺':'OCTA',
+    '81':'A81','27':'A81','243':'A81','729':'A81'
+  };
+
+  const PATH_BASE = 5;
+  const STEP_BASE = 800, STEP_FACTOR = 60, STEP_MIN = 100;
+
+  const LEADER_KEY = 'iki1uc-orbit-leader';
+  const LEADER_TIMEOUT = 2000;
+  const HEARTBEAT_EVERY = 500;
+  const CLAIM_JITTER_MAX = 120;
+
+  // ─── STATE ──────────────────────────────────────────────────────
+  const state = {
+    index: 0, running: true, speed: 3, mode: 'IQQ',
+    history: [], axiomCount: { IQQ:0, OCTA:0, A81:0, NC:0, P9:0 },
+    isLeader: false, accumulator: 0, lastFrame: null,
+    tabId: Math.random().toString(36).slice(2, 8).toUpperCase(),
+    knownTabs: new Map(),
+    atomTick: 0, atomDelta: 0,
+    pipeline: { cycle: 0, lastStep: null, ix: null, io: null, norm: null, oi: null },
+    ghost: { fix: 0, respos: [], lastUpdate: 0 }
+  };
+
+  document.getElementById('tabIdLabel').textContent = state.tabId;
+
+  // ─── FINGERPRINT ──────────────────────────────────────────────
+  function computeFingerprint() {
+    const parts = [
+      'pipeline4-ghost-v1',
+      ORBIT.length, PATH_BASE,
+      LEADER_TIMEOUT, HEARTBEAT_EVERY,
+      STEP_BASE, STEP_FACTOR, STEP_MIN,
+      JSON.stringify(AXIOM_MAP)
+    ].join('|');
+    let hash = 5381;
+    for (let i=0; i<parts.length; i++) {
+      hash = ((hash*33) ^ parts.charCodeAt(i)) >>> 0;
+    }
+    return hash.toString(16);
+  }
+  const ownFingerprint = computeFingerprint();
+
+  // ─── LEADER-ELECTION ──────────────────────────────────────────
+  function readLeader() {
+    try { const raw = localStorage.getItem(LEADER_KEY); return raw ? JSON.parse(raw) : null; } catch(_){return null;}
+  }
+  function writeLeader() {
+    localStorage.setItem(LEADER_KEY, JSON.stringify({ id: state.tabId, ts: Date.now() }));
+  }
+  function tryClaimLeadership() {
+    const now = Date.now();
+    const entry = readLeader();
+    if (state.isLeader) {
+      if (entry && entry.id !== state.tabId) {
+        state.isLeader = false; updateRoleBadge();
+        log(`⚠️ Leader‑Konflikt → zurück (Tab ${entry.id})`);
+        return;
+      }
+      writeLeader(); return;
+    }
+    if (!entry || now - entry.ts > LEADER_TIMEOUT) {
+      writeLeader();
+      const jitter = Math.floor(Math.random() * CLAIM_JITTER_MAX);
+      setTimeout(() => {
+        const check = readLeader();
+        if (check && check.id === state.tabId) {
+          state.isLeader = true; updateRoleBadge();
+          log('👑 Leader übernommen');
         }
-      });
+      }, jitter);
+    }
+  }
+  function updateRoleBadge() {
+    const el = document.getElementById('roleStatus');
+    el.textContent = state.isLeader ? 'LEADER' : 'FOLLOWER';
+    el.className = 'badge ' + (state.isLeader ? 'leader' : 'follower');
+    document.getElementById('roleBadge').textContent = state.isLeader ? 'LEADER' : 'FOLLOWER';
+    document.getElementById('roleBadge').className = 'badge ' + (state.isLeader ? 'leader' : 'follower');
+  }
+  setInterval(tryClaimLeadership, HEARTBEAT_EVERY);
+  tryClaimLeadership();
 
-      return Promise.all(promises);
+  // ─── BROADCASTCHANNEL ──────────────────────────────────────────
+  let bc = null;
+  try {
+    bc = new BroadcastChannel('iki1uc-orbit');
+    bc.onmessage = (e) => {
+      const data = e.data;
+      if (!data) return;
+      if (data.type === 'orbit.step' && !state.isLeader) {
+        state.index = data.index;
+        state.history.push(data.index);
+        if (state.history.length > 10) state.history.shift();
+        document.getElementById('syncStatus').textContent = '● synchronisiert';
+        document.getElementById('syncStatus').className = 'badge sync';
+        log(`📡 Sync‑Schritt: ${data.symbol}`);
+        updateUI();
+        updatePipeline();
+      }
+      if (data.type === 'orbit.reset' && !state.isLeader) {
+        state.index = 0; state.history = []; log('📡 Sync‑Reset'); updateUI(); updatePipeline();
+      }
+      if (data.type === 'orbit.mode' && !state.isLeader) {
+        state.mode = data.mode; applyModeButtons(data.mode); updateUI();
+      }
+      if (data.type === 'presence') handlePresence(data);
+      if (data.type === 'nc.move' && !state.isLeader) {
+        log(`📡 NC‑Move empfangen (Schritt #${data.index})`);
+      }
+      if (data.type === 'p9.move' && !state.isLeader) {
+        log(`📡 P9‑Move empfangen (Schritt #${data.index})`);
+      }
+      // GHOST‑SCAN Sync
+      if (data.type === 'ghost.fix') {
+        state.ghost.fix = data.fix;
+        state.ghost.respos = data.respos || [];
+        updateGhostUI();
+      }
+    };
+    setTimeout(() => {
+      document.getElementById('syncStatus').textContent = '● verbunden';
+      document.getElementById('syncStatus').className = 'badge sync';
+    }, 500);
+  } catch (_) {
+    document.getElementById('syncStatus').textContent = '○ kein BC';
+    document.getElementById('syncStatus').className = 'badge desync';
+  }
+  function broadcast(msg) { if(bc) try{bc.postMessage(msg);}catch(_){} }
+
+  // ─── PRESENCE / SCANNER ──────────────────────────────────────
+  function broadcastPresence() {
+    broadcast({ type:'presence', tabId:state.tabId, role:state.isLeader?'LEADER':'FOLLOWER', fingerprint:ownFingerprint, ts:Date.now() });
+    if (state.mode === 'NC' && state.isLeader) {
+      broadcast({ type:'presence', tabId:'NC-AGENT', role:'AGENT', fingerprint:'nc-agent-1', ts:Date.now() });
+    }
+    if (state.mode === 'P9' && state.isLeader) {
+      broadcast({ type:'presence', tabId:'PIPELINE9', role:'AGENT', fingerprint:'p9-v5', ts:Date.now() });
+    }
+  }
+
+  function handlePresence(data) {
+    const prev = state.knownTabs.get(data.tabId);
+    const mismatch = data.role !== 'AGENT' && data.fingerprint !== ownFingerprint;
+
+    if ((!prev || !prev.mismatch) && mismatch) {
+      pushMismatchLog(`⚠️ Code‑Mismatch → Tab ${data.tabId} (FP ${data.fingerprint} ≠ ${ownFingerprint})`);
+    }
+    if (prev && prev.role !== data.role) {
+      pushMismatchLog(`🔍 Rollenwechsel → Tab ${data.tabId}: ${prev.role} → ${data.role}`);
+    }
+    if (data.role === 'LEADER' && state.isLeader && data.tabId !== state.tabId) {
+      pushMismatchLog(`⚠️ Zwei Leader: ${state.tabId} und ${data.tabId}`);
     }
 
-    // ─── Fixpunkt berechnen ───────────────────────────────────────
-    function computeFixpoint(respos) {
-      const flat = respos.flatMap(r => r.OUT || []).map(Number).filter(x => !isNaN(x));
-      if (!flat.length) return 0.777;
-      const avg = flat.reduce((a,b)=>a+b,0) / flat.length;
-      return Number(((avg + 0.777) / 2).toFixed(3));
+    state.knownTabs.set(data.tabId, {
+      role: data.role, fingerprint: data.fingerprint,
+      lastSeen: Date.now(), mismatch
+    });
+    renderScanner();
+  }
+
+  function pushMismatchLog(msg) {
+    log(msg);
+    const box = document.getElementById('mismatchLog');
+    const line = document.createElement('div');
+    line.textContent = msg;
+    box.appendChild(line);
+    while(box.children.length > 30) box.removeChild(box.firstChild);
+  }
+
+  function renderScanner() {
+    const box = document.getElementById('tabScanBox');
+    const staleAfter = HEARTBEAT_EVERY * 6;
+    const now = Date.now();
+    for (const [id, info] of state.knownTabs) {
+      if (now - info.lastSeen > staleAfter) state.knownTabs.delete(id);
     }
-
-    // ─── LOOP‑Objekt ───────────────────────────────────────────────
-    function loopReturn(fix) {
-      return {
-        LOOP: true,
-        FIX: fix,
-        TIME: Date.now(),
-        STATE: fix > 0.7 ? "STABIL" : "LOW",
-        NEXT: Number((fix * 1.11).toFixed(3))
-      };
+    if (state.knownTabs.size === 0) { box.textContent = 'Noch keine anderen Tabs …'; return; }
+    box.innerHTML = '';
+    const self = document.createElement('div');
+    self.className = 'tab-row';
+    self.innerHTML = `<span class="tid">${state.tabId} (ich)</span><span class="trole">${state.isLeader?'LEADER':'FOLLOWER'}</span><span class="tfp">FP ${ownFingerprint}</span>`;
+    box.appendChild(self);
+    for (const [id, info] of state.knownTabs) {
+      const row = document.createElement('div');
+      let cls = 'tab-row' + (info.mismatch?' mismatch':'');
+      if (id === 'NC-AGENT') cls += ' agent';
+      if (id === 'PIPELINE9') cls += ' agent-p9';
+      row.className = cls;
+      row.innerHTML = `<span class="tid">${id}</span><span class="trole">${info.role}</span><span class="tfp">FP ${info.fingerprint}${info.mismatch?' ⚠️':''}</span>`;
+      box.appendChild(row);
     }
+  }
 
-    // ─── ROLL‑OVER ────────────────────────────────────────────────
-    function applyRollOver(loop) {
-      document.querySelectorAll(".respo-card").forEach(card => {
-        const extra = document.createElement("div");
-        extra.style.color = "#88f";
-        extra.style.fontSize = "11px";
-        extra.innerHTML = `<b>LOOP-FIX:</b> ${loop.FIX} · <b>STATE:</b> ${loop.STATE}`;
-        card.appendChild(extra);
-      });
-    }
+  setInterval(broadcastPresence, HEARTBEAT_EVERY);
+  setInterval(renderScanner, 1000);
 
-    // ─── Renderer ──────────────────────────────────────────────────
-    function renderScan(respos) {
-      grid.innerHTML = '';
+  // ─── AGENTEN ────────────────────────────────────────────────────
+  function ncMove() {
+    state.axiomCount.NC = (state.axiomCount.NC || 0) + 1;
+    document.getElementById('axiomNC').textContent = state.axiomCount.NC + ' Moves';
+    log('🤖 NC‑Agent bewegt sich');
+    broadcast({ type:'nc.move', index:state.index, ts:Date.now() });
+  }
 
-      respos.forEach(r => {
-        const card = document.createElement('div');
-        card.className = 'respo-card';
+  function p9Move() {
+    state.axiomCount.P9 = (state.axiomCount.P9 || 0) + 1;
+    document.getElementById('axiomP9').textContent = state.axiomCount.P9 + ' Moves';
+    log('🧩 P9‑Agent bewegt sich');
+    broadcast({ type:'p9.move', index:state.index, ts:Date.now() });
+  }
 
-        let statusClass = 'status-ok';
-        if (r.MISS || r.ERROR) statusClass = 'status-error';
-        else if (r.STATUS === 'HELFEN' || r.RESULT === 'HELFEN') statusClass = 'status-help';
+  // ─── PIPELINE4 ──────────────────────────────────────────────────
+  function updatePipeline() {
+    const idx = state.index;
+    const sym = ORBIT[idx] || '?';
+    state.pipeline.cycle = (state.pipeline.cycle || 0) + (state.isLeader ? 1 : 0);
+    state.pipeline.lastStep = sym;
 
-        card.classList.add(statusClass);
+    const ix = `IX${(idx % 9) + 1}`;
+    const io = `IO${(idx % 6) + 1}`;
+    const norm = ['FIT','FIX','MISS','RDY','ERROR','HELP'][idx % 6];
+    const oi = `OI${(idx % 6) + 1}`;
 
-        const id = r.ID ?? '—';
-        const raum = r.RAUM ? JSON.stringify(r.RAUM) : '(keine LAGE)';
-        const status = r.STATUS ?? (r.MISS ? 'MISSING' : 'UNKNOWN');
-        const result = r.RESULT ?? '—';
+    state.pipeline.ix = ix; state.pipeline.io = io; state.pipeline.norm = norm; state.pipeline.oi = oi;
 
-        card.innerHTML = `
-          <h2>${r.NAME}</h2>
-          <div class="detail">
-            <div><b>ID:</b> <span>${id}</span></div>
-            <div><b>LAGE:</b> <span>${raum}</span></div>
-            <div><b>STATUS:</b> <span>${status}</span></div>
-            <div><b>RESULT:</b> <span>${result}</span></div>
-            ${r.MISS ? '<div style="color:#ff4444;">⚠️ Datei nicht gefunden</div>' : ''}
-            ${r.ERROR ? `<div style="color:#ff4444;">❌ ${r.ERROR}</div>` : ''}
-          </div>
-        `;
-        grid.appendChild(card);
-      });
-    }
+    document.getElementById('pipelineIX').textContent = ix;
+    document.getElementById('pipelineIO').textContent = io;
+    document.getElementById('pipelineNorm').textContent = norm;
+    document.getElementById('pipelineOI').textContent = oi;
+    document.getElementById('pipelineCycle').textContent = state.pipeline.cycle;
+    document.getElementById('pipelineLastStep').textContent = sym;
+    document.getElementById('pipelineStatus').textContent = state.isLeader ? 'ACTIVE' : 'FOLLOW';
+  }
 
-    // ─── Haupt‑Loop ────────────────────────────────────────────────
-    async function scanLoop() {
+  // ─── GHOST‑SCAN ──────────────────────────────────────────────────
+  const RESPO_NAMES = ["AIR","boerse","markt3","HOME","USE","ACSH","REAL","BIL","DU","NG"];
+
+  async function loadAllRespos() {
+    const promises = RESPO_NAMES.map(async (name) => {
       try {
-        const respos = await loadAllRespos();
-        renderScan(respos);
-
-        const fix = computeFixpoint(respos);
-        const loop = loopReturn(fix);
-
-        applyRollOver(loop);
-
-        const now = new Date().toLocaleTimeString();
-        const ok = respos.filter(r => !r.MISS && !r.ERROR).length;
-        const total = respos.length;
-
-        statusLine.innerHTML = `
-          <span class="live">●</span> Scan: ${now} · 
-          <span style="color:#00ff88;">${ok}</span> / ${total} Respos · 
-          Fixpunkt: <span style="color:#6cf;">${loop.FIX}</span>
-        `;
-
+        const res = await fetch(`/RESPO/${name}.json`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        return { ...data, NAME: name, MISS: false };
       } catch (err) {
-        statusLine.innerHTML = `❌ Fehler im Loop: ${err.message}`;
+        return { NAME: name, MISS: true, ERROR: err.message };
+      }
+    });
+    return Promise.all(promises);
+  }
+
+  function computeFixpoint(respos) {
+    const flat = respos.flatMap(r => r.OUT || []).map(Number).filter(x => !isNaN(x));
+    if (!flat.length) return 0.777;
+    const avg = flat.reduce((a,b)=>a+b,0) / flat.length;
+    return Number(((avg + 0.777) / 2).toFixed(3));
+  }
+
+  function updateGhostUI() {
+    const fix = state.ghost.fix;
+    document.getElementById('fixpointDisplay').textContent = `FIX: ${fix.toFixed(3)}`;
+    document.getElementById('fixpointMini').textContent = fix.toFixed(3);
+    const grid = document.getElementById('ghostGrid');
+    grid.innerHTML = '';
+    const respos = state.ghost.respos || [];
+    respos.forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'ghost-card';
+      let cls = 'g-ok';
+      if (r.MISS || r.ERROR) cls = 'g-error';
+      else if (r.STATUS === 'HELFEN' || r.RESULT === 'HELFEN') cls = 'g-help';
+      card.classList.add(cls);
+      const status = r.STATUS ?? (r.MISS ? 'MISSING' : 'UNKNOWN');
+      const result = r.RESULT ?? '—';
+      card.innerHTML = `
+        <h3>${r.NAME}</h3>
+        <div class="g-detail">
+          <div><span>${status}</span> · <span>${result}</span></div>
+          ${r.MISS ? '<div style="color:#ff4444;">⚠️</div>' : ''}
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+    const ok = respos.filter(r => !r.MISS && !r.ERROR).length;
+    document.getElementById('ghostStatus').textContent = `${ok}/${respos.length} Respos · Fix ${fix.toFixed(3)}`;
+  }
+
+  async function ghostScan() {
+    try {
+      const respos = await loadAllRespos();
+      const fix = computeFixpoint(respos);
+      state.ghost.fix = fix;
+      state.ghost.respos = respos;
+      state.ghost.lastUpdate = Date.now();
+      updateGhostUI();
+      // Broadcast an andere Tabs
+      broadcast({ type:'ghost.fix', fix, respos });
+    } catch (err) {
+      document.getElementById('ghostStatus').textContent = `❌ Fehler: ${err.message}`;
+    }
+  }
+
+  // ─── UI-UPDATES ────────────────────────────────────────────────
+  function updateUI() {
+    const sym = ORBIT[state.index] || '?';
+    const axiom = (state.mode === 'NC' || state.mode === 'P9') ? state.mode : (AXIOM_MAP[sym] || '—');
+    document.getElementById('naviIndex').textContent = state.index;
+    document.getElementById('naviSymbol').textContent = sym;
+    document.getElementById('naviHeading').textContent = String(state.index * 12).padStart(3,'0') + '°';
+    document.getElementById('naviSpeed').textContent = (state.speed * 0.7 + state.index * 0.02).toFixed(1);
+    document.getElementById('naviMode').textContent = state.mode;
+    document.getElementById('axiomIQQ').textContent = state.mode === 'IQQ' ? '● aktiv' : '9→3';
+    document.getElementById('axiomOCTA').textContent = state.mode === 'OCTA' ? '● aktiv' : '◉◆△';
+    document.getElementById('axiomA81').textContent = state.mode === 'A81' ? '● aktiv' : '27·81';
+    if (state.mode !== 'NC') {
+      document.getElementById('axiomNC').textContent = (state.axiomCount.NC || 0) + ' Moves';
+    }
+    if (state.mode !== 'P9') {
+      document.getElementById('axiomP9').textContent = (state.axiomCount.P9 || 0) + ' Moves';
+    }
+    const orbitStatus = document.getElementById('orbitStatus');
+    orbitStatus.textContent = state.running ? 'AKTIV' : 'PAUSE';
+    orbitStatus.className = 'badge ' + (state.running ? 'aktiv' : 'pause');
+    updatePipeline();
+  }
+
+  function applyModeButtons(mode) {
+    document.querySelectorAll('[id^="btnMode"]').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('btnMode' + mode);
+    if (btn) btn.classList.add('active');
+  }
+
+  // ─── CANVAS ────────────────────────────────────────────────────
+  const canvas = document.getElementById('orbitCanvas');
+  const ctx = canvas.getContext('2d');
+  function drawOrbit() {
+    const w=canvas.width, h=canvas.height;
+    ctx.shadowBlur=0; ctx.fillStyle='#000'; ctx.fillRect(0,0,w,h);
+    const history = state.history.slice(-5);
+    history.forEach((idx,i) => {
+      const alpha = 0.1 + (i/PATH_BASE)*0.3;
+      const x = 80 + (w-160)*(i/(PATH_BASE-1));
+      const y = h-30;
+      ctx.fillStyle=`rgba(108,204,255,${alpha})`;
+      ctx.font='16px Consolas'; ctx.textAlign='center'; ctx.textBaseline='bottom';
+      ctx.fillText(ORBIT[idx]||'?', x, y);
+      if(i>0) {
+        ctx.strokeStyle=`rgba(108,204,255,${alpha*0.3})`;
+        ctx.lineWidth=1;
+        const prevX = 80 + (w-160)*((i-1)/(PATH_BASE-1));
+        ctx.beginPath(); ctx.moveTo(prevX,y); ctx.lineTo(x,y); ctx.stroke();
+      }
+    });
+    const symbol = ORBIT[state.index]||'?';
+    ctx.fillStyle='#6cf'; ctx.font='60px Consolas'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.shadowColor='#6cf'; ctx.shadowBlur=20;
+    ctx.fillText(symbol, w/2, h/2-20);
+    ctx.shadowBlur=0;
+    const axiom = (state.mode === 'NC' || state.mode === 'P9') ? state.mode : (AXIOM_MAP[symbol]||'—');
+    ctx.fillStyle='#5a7a8a'; ctx.font='14px Consolas'; ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText(`#${state.index} · ${axiom}`, w/2, h/2+40);
+    ctx.fillStyle='#3a4a5a'; ctx.font='11px Consolas'; ctx.textAlign='left'; ctx.textBaseline='bottom';
+    ctx.fillText(`⏩ ${state.speed}× · ${state.mode} · Fix ${state.ghost.fix.toFixed(3)} · Tab ${state.tabId}`, 12, h-6);
+    ctx.textAlign='right';
+    ctx.fillText(`${state.index+1}/${ORBIT.length}`, w-12, h-6);
+  }
+
+  // ─── ORBIT-STEP ────────────────────────────────────────────────
+  function stepOrbit() {
+    const next = (state.index+1) % ORBIT.length;
+    state.index = next;
+    state.history.push(next);
+    if(state.history.length>10) state.history.shift();
+    state.atomTick = (state.atomTick||0)+1;
+
+    const sym = ORBIT[next];
+    if (state.mode === 'NC') {
+      ncMove();
+    } else if (state.mode === 'P9') {
+      p9Move();
+    } else {
+      const axiom = AXIOM_MAP[sym] || null;
+      if (axiom && state.mode === axiom) {
+        state.axiomCount[axiom] = (state.axiomCount[axiom]||0) + 1;
       }
     }
+    log(`Orbit‑Schritt → ${sym} (${(state.mode==='NC'||state.mode==='P9')?state.mode:(AXIOM_MAP[sym]||'—')})`);
+    broadcast({ type:'orbit.step', index:state.index, symbol:sym });
+    updateUI();
+  }
 
-    // ─── Start ────────────────────────────────────────────────────
-    scanLoop();
-    setInterval(scanLoop, 3000);
-  </script>
+  // ─── ATOM-UHR ──────────────────────────────────────────────────
+  function updateAtomClock(now) {
+    const time = new Date(now);
+    const timeStr = time.toTimeString().slice(0,8) + '.' + String(time.getMilliseconds()).padStart(3,'0');
+    document.getElementById('atomTime').textContent = timeStr;
+    document.getElementById('atomTick').textContent = state.atomTick||0;
+    document.getElementById('atomDelta').textContent = (state.atomDelta||0).toFixed(1);
+  }
+
+  // ─── HAUPT-LOOP ────────────────────────────────────────────────
+  function loop(now) {
+    if(state.lastFrame===null) state.lastFrame = now;
+    const delta = now - state.lastFrame;
+    state.lastFrame = now;
+    state.atomDelta = delta;
+
+    if(state.running && state.isLeader) {
+      state.accumulator += delta;
+      const stepTime = Math.max(STEP_MIN, STEP_BASE - state.speed*STEP_FACTOR);
+      let guard=0;
+      while(state.accumulator >= stepTime && guard<20) {
+        stepOrbit();
+        state.accumulator -= stepTime;
+        guard++;
+      }
+    } else { state.accumulator = 0; }
+
+    drawOrbit();
+    updateAtomClock(now);
+    requestAnimationFrame(loop);
+  }
+
+  // ─── UI-FUNKTIONEN ─────────────────────────────────────────────
+  function togglePlay() {
+    state.running = !state.running;
+    document.getElementById('btnPlay').textContent = state.running ? '⏸ Pause' : '▶ Start';
+    updateUI();
+  }
+  function resetOrbit() {
+    if(!state.isLeader) { log('⟲ Reset nur Leader'); return; }
+    state.index=0; state.history=[]; state.axiomCount={IQQ:0,OCTA:0,A81:0,NC:0,P9:0};
+    state.accumulator=0; state.atomTick=0; state.pipeline.cycle=0;
+    document.getElementById('axiomNC').textContent = '0 Moves';
+    document.getElementById('axiomP9').textContent = '0 Moves';
+    log('⟲ Reset');
+    broadcast({ type:'orbit.reset' });
+    updateUI();
+  }
+  function setMode(mode) {
+    state.mode = mode;
+    applyModeButtons(mode);
+    log(`🌀 Modus: ${mode}`);
+    broadcast({ type:'orbit.mode', mode });
+    updateUI();
+  }
+
+  // ─── LOG ────────────────────────────────────────────────────────
+  function log(msg) {
+    const logBox = document.getElementById('log');
+    const time = new Date().toLocaleTimeString();
+    const line = document.createElement('div');
+    line.textContent = `[${time}] ${msg}`;
+    logBox.appendChild(line);
+    while(logBox.children.length > 60) logBox.removeChild(logBox.firstChild);
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+
+  // ─── EVENTS ────────────────────────────────────────────────────
+  document.getElementById('btnPlay').addEventListener('click', togglePlay);
+  document.getElementById('btnStep').addEventListener('click', ()=>{ if(state.isLeader) stepOrbit(); else log('⏭ Schritt nur Leader'); });
+  document.getElementById('btnReset').addEventListener('click', resetOrbit);
+  document.getElementById('btnModeIQQ').addEventListener('click', ()=>setMode('IQQ'));
+  document.getElementById('btnModeOCTA').addEventListener('click', ()=>setMode('OCTA'));
+  document.getElementById('btnModeA81').addEventListener('click', ()=>setMode('A81'));
+  document.getElementById('btnModeNC').addEventListener('click', ()=>setMode('NC'));
+  document.getElementById('btnModeP9').addEventListener('click', ()=>setMode('P9'));
+
+  const speedSlider = document.getElementById('speedSlider');
+  const speedLabel = document.getElementById('speedLabel');
+  speedSlider.addEventListener('input', ()=>{
+    state.speed = parseInt(speedSlider.value,10);
+    speedLabel.textContent = state.speed + '×';
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if(e.key===' ') { e.preventDefault(); togglePlay(); }
+    if(e.key==='ArrowRight' && state.isLeader) stepOrbit();
+    if(e.key==='r'||e.key==='R') resetOrbit();
+    if(e.key==='1') setMode('IQQ');
+    if(e.key==='2') setMode('OCTA');
+    if(e.key==='3') setMode('A81');
+    if(e.key==='4') setMode('NC');
+    if(e.key==='5') setMode('P9');
+  });
+
+  // ─── INIT ──────────────────────────────────────────────────────
+  async function init() {
+    state.history.push(0);
+    updateUI();
+    updateRoleBadge();
+    applyModeButtons('IQQ');
+    broadcastPresence();
+
+    // GHOST‑SCAN initial starten
+    await ghostScan();
+    // und dann alle 3 Sekunden wiederholen
+    setInterval(ghostScan, 3000);
+
+    log('🔧 PIPELINE4 + GHOST‑SCAN · gestartet');
+    log(`🆔 Tab ${state.tabId} · FP ${ownFingerprint}`);
+    log('⌨️  Leertaste=Pause  →=Schritt  r=Reset  1/2/3/4/5=Modus');
+    log('👻 GHOST‑SCAN läuft parallel – Fixpunkt wird live angezeigt');
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener('error', (e)=>log('⚠️ Fehler: '+e.message), true);
+  setInterval(updateRoleBadge, HEARTBEAT_EVERY);
+  init();
+</script>
 
 </body>
 </html>
